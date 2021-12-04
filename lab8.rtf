@@ -1,0 +1,328 @@
+{\rtf1\ansi\ansicpg1251\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fmodern\fcharset0 Courier;\f2\fmodern\fcharset0 Courier-Oblique;
+\f3\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red153\green168\blue186;\red32\green32\blue32;\red109\green109\blue109;
+\red191\green100\blue38;\red254\green187\blue91;\red88\green118\blue71;\red86\green132\blue173;\red133\green96\blue154;
+}
+{\*\expandedcolortbl;;\csgenericrgb\c60000\c65882\c72941;\csgenericrgb\c12549\c12549\c12549;\csgenericrgb\c42745\c42745\c42745;
+\csgenericrgb\c74902\c39216\c14902;\csgenericrgb\c99608\c73333\c35686;\csgenericrgb\c34510\c46275\c27843;\csgenericrgb\c33725\c51765\c67843;\csgenericrgb\c52157\c37647\c60392;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 \
+
+\f1 \cf4 -- 1.Create a function that:\
+-- a. Increments given values by 1 and returns it.\
+\
+\cf5 CREATE FUNCTION 
+\f2\i \cf6 inc
+\f1\i0 \cf2 (val \cf5 integer\cf2 ) \cf5 RETURNS integer AS \cf7 $$ \cf5 BEGIN\
+RETURN \cf2 val + \cf8 1\cf5 ;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+\
+SELECT 
+\f2\i \cf6 inc
+\f1\i0 \cf2 (\cf8 5\cf2 )\cf5 ;\
+\
+\cf4 -- b. Returns sum of 2 numbers.\
+\
+\cf5 CREATE FUNCTION 
+\f2\i \cf6 sum
+\f1\i0 \cf2 (val1 \cf5 integer, \cf2 val2 \cf5 integer\cf2 ) \cf5 RETURNS integer AS \cf7 $$ \cf5 BEGIN\
+RETURN \cf2 val1 + val2\cf5 ;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+\
+SELECT \cf6 sum\cf2 (\cf8 5\cf5 , \cf8 3\cf2 )\cf5 ;\
+\
+\cf4 -- c. Returns true or false if numbers are divisible by 2.\
+\
+\cf5 CREATE FUNCTION 
+\f2\i \cf6 div_2
+\f1\i0 \cf2 (val \cf5 integer\cf2 ) \cf5 RETURNS bool AS \cf7 $$ \cf5 BEGIN\
+RETURN \cf2 val % \cf8 2 \cf2 = \cf8 0\cf5 ;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+SELECT 
+\f2\i \cf6 div_2
+\f1\i0 \cf2 (\cf8 6\cf2 )\cf5 ;\
+\cf4 -- SELECT div_2(5);\
+\
+-- d. Checks some password for validity.e. Returns two outputs, but has one input.\
+\
+\cf5 CREATE FUNCTION 
+\f2\i \cf6 check_password
+\f1\i0 \cf2 (\cf5 password char\cf2 (\cf8 9\cf2 )) \cf5 RETURNS bool AS \cf7 $$ \cf5 BEGIN\
+RETURN password \cf2 = \cf7 'diana'\cf5 ;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+SELECT 
+\f2\i \cf6 check_password
+\f1\i0 \cf2 (\cf7 'diana'\cf2 )\cf5 ;\
+\
+\cf4 -- e. Returns two outputs, but has one input.\
+\
+\cf5 CREATE FUNCTION 
+\f2\i \cf6 area_and_perimeter
+\f1\i0 \cf2 (\cf5 in \cf2 val \cf5 integer, out \cf2 area \cf5 integer, out \cf2 perimeter \cf5 integer\cf2 ) \cf5 AS \cf7 $$ \cf5 BEGIN\
+\cf2 area := val * val\cf5 ;\
+\cf2 perimeter := val * \cf8 4\cf5 ;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+SELECT 
+\f2\i \cf6 area_and_perimeter
+\f1\i0 \cf2 (\cf8 5\cf2 )\cf5 ;\
+\
+\
+\cf4 -- 2.\
+-- 
+\f3 \uc0\u1072 
+\f1 . Create a trigger that:a.Return timestamp of the occured action within the database.\
+\
+\cf5 CREATE TABLE \cf2 employees(\
+   \cf9 id \cf5 INT GENERATED ALWAYS AS IDENTITY,\
+   \cf9 first_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   \cf9 last_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   PRIMARY KEY\cf2 (\cf9 id\cf2 )\
+)\cf5 ;\
+\
+CREATE TABLE \cf2 employee_audits (\
+   \cf9 id \cf5 INT GENERATED ALWAYS AS IDENTITY,\
+   \cf9 employee_id \cf5 INT NOT NULL,\
+   \cf9 last_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   \cf9 new_last_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   \cf9 changed_on \cf5 TIMESTAMP\cf2 (\cf8 6\cf2 ) \cf5 NOT NULL\
+\cf2 )\cf5 ;\
+CREATE OR REPLACE FUNCTION 
+\f2\i \cf6 log_last_name_changes
+\f1\i0 \cf2 ()\
+  \cf5 RETURNS TRIGGER\
+  LANGUAGE \cf2 PLPGSQL\
+  \cf5 AS\
+\cf7 $$\
+\cf5 BEGIN\
+	IF NEW\cf2 .\cf9 last_name \cf2 <> \cf5 OLD\cf2 .\cf9 last_name \cf5 THEN\
+		 INSERT INTO \cf2 employee_audits(\cf9 employee_id\cf5 ,\cf9 last_name\cf5 ,\cf9 new_last_name\cf5 ,\cf9 changed_on\cf2 )\
+		 \cf5 VALUES\cf2 (\cf5 OLD\cf2 .\cf9 id\cf5 ,OLD\cf2 .\cf9 last_name\cf5 ,NEW\cf2 .\cf9 last_name\cf5 ,\cf6 now\cf2 ())\cf5 ;\
+	END IF;\
+\
+	RETURN NEW;\
+END;\
+\cf7 $$\
+\
+\cf5 CREATE TRIGGER \cf2 last_name_changes\
+  \cf5 BEFORE UPDATE\
+  ON \cf2 employees\
+  \cf5 FOR EACH ROW\
+  EXECUTE PROCEDURE 
+\f2\i \cf6 log_last_name_changes
+\f1\i0 \cf2 ()\cf5 ;\
+\
+INSERT INTO \cf2 employees (\cf9 first_name\cf5 , \cf9 last_name\cf2 )\
+\cf5 VALUES \cf2 (\cf7 'Diana'\cf5 , \cf7 'Ruzi'\cf2 )\cf5 ;\
+\
+INSERT INTO \cf2 employees (\cf9 first_name\cf5 , \cf9 last_name\cf2 )\
+\cf5 VALUES \cf2 (\cf7 'Mariyam'\cf5 , \cf7 'Baigissiyeva'\cf2 )\cf5 ;\
+\
+UPDATE \cf2 employees\
+\cf5 SET \cf9 last_name \cf2 = \cf7 'Kurenbekova'\
+\cf5 WHERE \cf9 ID \cf2 = \cf8 2\cf5 ;\
+\
+SELECT \cf6 * \cf5 FROM \cf2 employee_audits\cf5 ;\
+\
+\cf4 -- b.Computes the age of a person when persons\'92 date of birth is inserted.\
+\
+\cf5 CREATE TABLE \cf2 patient (\
+   \cf9 id \cf5 INT GENERATED ALWAYS AS IDENTITY,\
+   \cf9 date_of_birth \cf5 date,\
+   \cf9 age \cf5 integer,\
+   PRIMARY KEY\cf2 (\cf9 id\cf2 )\
+)\cf5 ;\
+\
+CREATE OR REPLACE FUNCTION 
+\f2\i \cf6 ages
+\f1\i0 \cf2 ()\
+  \cf5 RETURNS TRIGGER\
+  LANGUAGE \cf2 PLPGSQL\
+  \cf5 AS\
+\cf7 $$\
+\cf5 BEGIN\
+\
+	NEW\cf2 .\cf9 age \cf2 = \cf6 extract\cf2 (\cf5 years from \cf6 age\cf2 (\cf6 current_date\cf5 , new\cf2 .\cf9 date_of_birth \cf2 ))\cf5 ;\
+	RETURN NEW;\
+END;\
+\cf7 $$\
+\
+\cf5 CREATE TRIGGER \cf2 compute_age\
+  \cf5 Before INSERT\
+  ON \cf2 patient\
+  \cf5 FOR EACH ROW\
+  EXECUTE PROCEDURE 
+\f2\i \cf6 ages
+\f1\i0 \cf2 ()\cf5 ;\
+\
+INSERT INTO \cf2 patient (\cf9 date_of_birth\cf2 )\
+\cf5 VALUES \cf2 (\cf7 '2002-11-20'\cf2 )\cf5 ;\
+INSERT INTO \cf2 patient (\cf9 date_of_birth\cf2 )\
+\cf5 VALUES \cf2 (\cf7 '1980-04-01'\cf2 )\cf5 ;\
+INSERT INTO \cf2 patient (\cf9 date_of_birth\cf2 )\
+\cf5 VALUES \cf2 (\cf7 '2008-12-05'\cf2 )\cf5 ;\
+\
+\cf4 -- c.Adds 12% tax on the price of the inserted item.\
+\
+\cf5 CREATE TABLE \cf2 items (\
+    \cf9 item_id \cf5 INT GENERATED ALWAYS AS IDENTITY,\
+    \cf9 price \cf5 INT NOT NULL,\
+    PRIMARY KEY\cf2 (\cf9 item_id\cf2 )\
+)\cf5 ;\
+\
+CREATE OR REPLACE FUNCTION 
+\f2\i \cf6 tax
+\f1\i0 \cf2 () \cf5 RETURNS TRIGGER AS \cf7 $$\
+\cf5 BEGIN\
+    new\cf2 .\cf9 price \cf2 = \cf5 new\cf2 .\cf9 price \cf2 + \cf5 new\cf2 .\cf9 price \cf2 * \cf8 0.12\cf5 ;\
+    RETURN new;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+\
+CREATE TRIGGER \cf2 set_tax\
+\cf5 BEFORE INSERT ON \cf2 items\
+\cf5 FOR EACH ROW\
+EXECUTE PROCEDURE 
+\f2\i \cf6 tax
+\f1\i0 \cf2 ()\cf5 ;\
+\
+\
+INSERT INTO \cf2 items(\cf9 price\cf2 )\
+\cf5 VALUES \cf2 (\cf8 100\cf2 )\cf5 ;\
+\
+\cf4 -- d.Prevents deletion of any row from only one table.\
+\cf5 CREATE TABLE \cf2 students(\
+   \cf9 id \cf5 INT GENERATED ALWAYS AS IDENTITY,\
+   \cf9 first_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   \cf9 last_name \cf5 VARCHAR\cf2 (\cf8 40\cf2 ) \cf5 NOT NULL,\
+   PRIMARY KEY\cf2 (\cf9 id\cf2 )\
+)\cf5 ;\
+\
+CREATE OR REPLACE FUNCTION 
+\f2\i \cf6 delete_off
+\f1\i0 \cf2 () \cf5 RETURNS TRIGGER AS \cf7 $$\
+\cf5 BEGIN\
+\
+    RETURN null;\
+END; \cf7 $$\
+\cf5 LANGUAGE \cf2 PLPGSQL\cf5 ;\
+\
+CREATE TRIGGER \cf2 del_off\
+\cf5 BEFORE delete ON \cf2 students\
+\cf5 FOR EACH ROW\
+EXECUTE PROCEDURE 
+\f2\i \cf6 delete_off
+\f1\i0 \cf2 ()\cf5 ;\
+\
+INSERT INTO \cf2 students (\cf9 first_name\cf5 , \cf9 last_name\cf2 )\
+\cf5 VALUES \cf2 (\cf7 'Mariyam'\cf5 , \cf7 'Kurenbekova'\cf2 )\cf5 ;\
+\
+delete from \cf2 students \cf5 where \cf9 id\cf2 =\cf8 1\cf5 ;\
+\
+\cf4 -- e.Launches functions  1.d and 1.e.\
+\
+\
+\
+\
+-- 3\
+-- What is the difference between procedure and function\
+-- Function is used to calculate something from a given input.\
+-- While procedure is the set of commands, which are executed in a order.\
+\
+-- 4.Create procedures that:\
+\
+\cf5 CREATE TABLE \cf2 employee\
+(\
+    \cf9 id \cf5 INTEGER,\
+    \cf9 name \cf5 VARCHAR,\
+    \cf9 date_of_birth \cf5 DATE,\
+    \cf9 age \cf5 INTEGER,\
+    \cf9 salary \cf5 INTEGER,\
+    \cf9 workexperience \cf5 INTEGER,\
+    \cf9 discount \cf5 INTEGER\
+\cf2 )\cf5 ;\
+drop table \cf2 employee\
+\
+ \cf4 -- a) Increases salary by 10% for every 2 years of work experience and provides\
+-- 10% discount and after 5 years adds 1% to the discount.\
+\
+\cf5 create or replace procedure 
+\f2\i \cf6 bonus
+\f1\i0 \cf2 ()\
+\cf5 language \cf2 plpgsql\
+\cf5 as \cf7 $$\
+\cf5 begin\
+    update \cf2 employee\
+    \cf5 set \cf9 salary \cf2 = employee.\cf9 salary\cf2 *(employee.\cf9 workexperience\cf2 /\cf8 2\cf2 +\cf8 1\cf2 )\cf5 ,\
+    \cf9 discount \cf2 = \cf8 10\
+    \cf5 where \cf2 employee.\cf9 workexperience \cf2 >= \cf8 2\cf5 ;\
+\
+    update \cf2 employee \cf5 set \cf9 discount \cf2 = employee.\cf9 discount\cf2 +(employee.\cf9 workexperience\cf2 /\cf8 5\cf2 )\
+    \cf5 where \cf2 employee.\cf9 workexperience \cf2 >= \cf8 5\cf5 ;\
+\
+    commit;\
+end;\cf7 $$\cf5 ;\
+\
+call 
+\f2\i \cf6 bonus
+\f1\i0 \cf2 ()\cf5 ;\
+\
+insert into \cf2 employee \cf5 values \cf2 (\cf8 1\cf5 ,\cf7 'Diana'\cf5 , \cf7 '2002-11-20'\cf5 , \cf8 19\cf5 , \cf8 100000\cf5 ,\cf8 5\cf5 , \cf8 0\cf2 )\cf5 ;\
+\
+\cf4 -- b) After reaching 40 years, increase salary by 15%. If work experience is more\
+-- than 8 years, increase salary for 15% of the already increased value for work\
+-- experience and provide a constant 20% discount.\
+\cf5 create or replace procedure 
+\f2\i \cf6 bonus2
+\f1\i0 \cf2 ()\
+\cf5 language \cf2 plpgsql\
+\cf5 as \cf7 $$\
+\cf5 begin\
+    update \cf2 employee\
+    \cf5 set \cf9 salary \cf2 = employee.\cf9 salary\cf2 *\cf8 1.15\
+    \cf5 where \cf2 employee.\cf9 age \cf2 >= \cf8 40\cf5 ;\
+\
+    update \cf2 employee \cf5 set \cf9 discount \cf2 = \cf8 20\cf5 ,\
+                        \cf9 salary \cf2 = \cf9 salary\cf2 *\cf8 1.15\
+    \cf5 where \cf2 employee.\cf9 workexperience \cf2 >= \cf8 8 \cf5 and \cf2 employee.\cf9 age \cf2 >= \cf8 40\cf5 ;\
+\
+    commit;\
+end;\cf7 $$\cf5 ;\
+\
+call 
+\f2\i \cf6 bonus2
+\f1\i0 \cf2 ()\cf5 ;\
+\
+insert into \cf2 employee \cf5 values \cf2 ( \cf8 2\cf5 , \cf7 'Ayana'\cf5 , \cf7 '2006-01-15'\cf5 , \cf8 15\cf5 , \cf8 40000\cf5 , \cf8 10\cf5 ,\cf8 0\cf2 )\cf5 ;\
+\
+UPDATE \cf2 employee\
+\cf5 SET \cf9 age \cf2 = \cf8 18\
+\cf5 WHERE \cf9 ID \cf2 = \cf8 1\cf5 ;\
+\
+\
+\cf4 -- 5\
+\
+\cf5 with recursive \cf2 recommenders(\cf9 recommender\cf5 , \cf9 member\cf2 ) \cf5 as \cf2 (\
+  \cf5 select \cf6 recommendedby\cf5 , \cf6 memid\
+    \cf5 from \cf2 members\
+  \cf5 union all\
+  select \cf2 mems.\cf6 recommendedby\cf5 , \cf2 recs.\cf9 member\
+    \cf5 from \cf2 recommenders recs\
+    \cf5 inner join \cf2 members mems\
+      \cf5 on \cf2 mems.\cf6 memid \cf2 = recs.\cf9 recommender\
+\cf2 )\
+\cf5 select \cf2 recs.\cf9 member \cf2 member\cf5 , \cf2 recs.\cf9 recommender\cf5 , \cf2 mems.\cf6 firstname\cf5 , \cf2 mems.\cf6 surname\
+  \cf5 from \cf2 recommenders recs\
+  \cf5 inner join \cf2 members mems\
+    \cf5 on \cf2 recs.\cf9 recommender \cf2 = mems.\cf6 memid\
+  \cf5 where \cf2 recs.\cf9 member \cf2 = \cf8 22 \cf5 or \cf2 recs.\cf9 member \cf2 = \cf8 12\
+\cf5 order by \cf2 recs.\cf9 member \cf5 asc, \cf2 recs.\cf9 recommender \cf5 desc\
+}
